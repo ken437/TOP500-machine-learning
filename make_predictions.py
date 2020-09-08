@@ -30,7 +30,7 @@ argsset = parser.parse_args()
 
 #echo inputs
 if argsset.model_eval_method not in ['ToP', 'ToA']: raise ValueError('The model_eval_method parameter must take one of two values: "ToP" or "ToA"')
-print(f'Using the model that best predicted {argsset.dependent_variable} during the {"train-on-past (ToP)" if argsset == "ToP" else "train-on-all (ToA)"} case study\n')
+print(f'Using the model that best predicted {argsset.dependent_variable} during the {"train-on-past (ToP)" if argsset.model_eval_method == "ToP" else "train-on-all (ToA)"} case study\n')
 print(f'The theoretical supercomputer observation will have the following features:')
 print(f'Architecture: {argsset.architecture}')
 print(f'Microarchitecture: {argsset.microarchitecture}')
