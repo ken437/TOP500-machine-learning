@@ -23,11 +23,11 @@ Command line argument values are restricted in the following ways:
 * dependent_variable must be either the string "Log(Rmax)" or "Log(Efficiency)"
 * architecture must be one of the strings "Cluster", "MPP", or "Constellations"
 * microarchitecture must be one of the following strings: 'AMD Zen (Naples)', 'AMD Zen-2 (Rome)', 'Bulldozer', 'CBEA', 'IBM A2', 'Intel Broadwell', 'Intel Cascade lake', 'Intel Core', 'Intel Haswell', 'Intel IvyBridge', 'Intel Nehalem', 'Intel SandyBridge', 'Intel Skylake', 'Intel Westmere', 'K10', 'K8', 'Knights Landing', 'Many Integrated Cores', 'Montecito', 'POWER5', 'POWER6', 'POWER7', 'POWER9', 'Piledriver', 'PowerPC 970', 'SBSA', 'SPARC64 IXfx', 'SPARC64 VII', 'SPARC64 VIIIfx', 'SPARC64 XIfx', 'SW26010', 'Unknown', 'Vulcan', or 'Zen'
-* year must be an int or float
-* clockspeed must be a positive int or float
+* year must be an int
+* clockspeed must be a positive float
 * total cores must be a positive int
 * fraction of cores that are accelerators must be an int or float in the interval [0, 1]
-* seed, if used, shoudl be an int
+* seed, if used, should be an int
 
 Training Set Information
 ------------------------
