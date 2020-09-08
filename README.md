@@ -11,6 +11,7 @@ The next six arguments can be used to specify the features of a theoretical supe
 1. clockspeed
 1. total cores
 1. fraction of cores that are accelerators (frac_accel_cores)
+
 Remember to surround multi-word microarchitecture arguments with quotation marks to clarify that they are a single argument.
 
 The final, optional, argument is a value that can be used to seed the random number generator. It takes a default value of 10, but setting it to different values can be useful for determining the effect of chance on the model predictions.
