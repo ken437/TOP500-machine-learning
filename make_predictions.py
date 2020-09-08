@@ -28,6 +28,18 @@ parser.add_argument('frac_accel_cores', metavar = 'frac_accel_cores', type=float
 parser.add_argument('--seed', metavar = 'seed', type=int, action='store', default=10, help='(int) Optional value to seed the random number generator (default=10)')
 argsset = parser.parse_args()
 
+#echo inputs
+if argsset.model_eval_method not in ['ToP', 'ToA']: raise ValueError('The model_eval_method parameter must take one of two values: "ToP" or "ToA"')
+print(f'Using the model that best predicted {argsset.dependent_variable} during the {"train-on-past (ToP)" if argsset == "ToP" else "train-on-all (ToA)"} case study\n')
+print(f'The theoretical supercomputer observation will have the following features:')
+print(f'Architecture: {argsset.architecture}')
+print(f'Microarchitecture: {argsset.microarchitecture}')
+print(f'Year: {argsset.year}')
+print(f'Clockspeed: {argsset.clockspeed} GHz')
+print(f'Total Cores: {argsset.total_cores}')
+print(f'Fraction of Cores that are Accelerators: {argsset.frac_accel_cores}')
+print()
+
 # read in the files (assumes TOP500 files are stored in a directory called 'TOP500_files' in the same directory as this script
 
 top500_dir_path = "TOP500_files/"
@@ -647,4 +659,6 @@ seed = argsset.seed
 random.seed(seed)
 
 prediction = predict_using_model(model_evaluation_methodology, dependent_variable, features)
+is_rmax = dependent_variable == "Log(Rmax)"
 print(f'{dependent_variable} prediction: {round(prediction, 3)}')
+print(f'This corresponds to a {"Rmax" if is_rmax else "Efficiency"} value of {round(np.exp(prediction), 3)} {"TFlops" if is_rmax else "GFlops/Watt"}')
