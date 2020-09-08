@@ -460,22 +460,27 @@ data contains the dependent variable.
 @param train: the cleaned, unnormalized training DataFrame to use
 @param test: the cleaned, unnormalized testing DataFrame to use
 @param normalizer: the normalizer class to use. If None, do not normalize
-@return: (train_x, train_y, test_x, test_y), where train_x is normalized
-training x data, train_y is unnormalized training y data, test_x is normalized
-testing x data, and test_y is unnormalized testing y data
+@return: (train_x, train_y, test_data_normalizer) where train_x is normalized
+training x data, train_y is unnormalized training y data, and
+test_data_normalizer is function that is passed the test data
+and returns the normalized test_x and unnormalized test_y
 """
-def normalize_and_split(train, test, normalizer=StandardScaler):
+def normalize_and_split(train, normalizer=StandardScaler):
   train_x = train.values[:,:-1]
   train_y = train.values[:,-1]
-  test_x = test.values[:,:-1]
-  test_y = test.values[:,-1]
   #no need to normalize y data
   if normalizer is not None:
     norm = normalizer()
     norm.fit(train_x)
     train_x = norm.transform(train_x)
+
+  def normalize_test(test):
+    test_x = test.values[:,:-1]
+    test_y = test.values[:,-1]
     test_x = norm.transform(test_x)
-  return (train_x, train_y, test_x, test_y)
+    return (test_x, test_y)
+
+  return (train_x, train_y, normalize_test)
 
 """
 Removes square brackets from an input string
@@ -495,11 +500,12 @@ did best in the ToP case study, not the ToA one.
 @param dependent_variable: 'Log(Rmax)' or 'Log(Efficiency)', specifies which 
 dependent variable should be predicted. Note that the model optimized for the correct
 dependent variable will be used.
-@param features: a dictionary specifying values for each of the six feature variables
-in the observation that needs to be predicted
-@return: a float specifying the predicted dependent variable value
+@return: a function predict(features), such that
+    @param features: a dictionary specifying values for each of the six feature variables
+    in the observation that needs to be predicted
+    @return: a float specifying the predicted dependent variable value
 """
-def predict_using_model(model_evaluation_methodology, dependent_variable, features):
+def train_model(model_evaluation_methodology, dependent_variable):
   req_feats = ["Architecture", "Microarchitecture", "Year", "Clockspeed", 
                "Total Cores", "Fraction of Cores that are Accelerators"]
   legit_mem_vals = ["ToP", "ToA"]
@@ -524,36 +530,6 @@ def predict_using_model(model_evaluation_methodology, dependent_variable, featur
   elif dependent_variable not in legit_dv_vals:
     raise ValueError(_no_bracks(f"The variable dependent_variable must have one of these values: {legit_dv_vals}, but was {dependent_variable}"))
 
-  missing_feats = [feat for feat in req_feats if feat not in features]
-  if len(missing_feats) != 0:
-    raise ValueError(_no_bracks(f"The following features are missing: {missing_feats}"))
-
-  if not isinstance(features["Architecture"], str):
-    raise TypeError(f"The feature 'Architecture' must be a string, but was a {type(features['Architecture']).__name__}")
-  elif features["Architecture"] not in legit_arch_vals:
-    raise ValueError(_no_bracks(f"The feature 'Architecture' must have one of these values: {legit_arch_vals}, but was {features['Architecture']}"))
-  elif not isinstance(features["Microarchitecture"], str):
-    raise(TypeError(f"The feature 'Microarchitecture' must be a string, but was a {type(features['Microarchitecture']).__name__}"))
-  elif features["Microarchitecture"] not in legit_uarch_vals:
-    raise ValueError(_no_bracks(f"The feature 'Microarchitecture must have one of these values: {legit_uarch_vals}, but was {features['Microarchitecture']}"))
-  elif not isinstance(features["Clockspeed"], int) and not isinstance(features['Clockspeed'], float):
-    raise TypeError(f"The feature 'Clockspeed' must be either an int or a float, but was a {type(features['Clockspeed']).__name__}")
-  elif features["Clockspeed"] <= 0:
-    raise ValueError(f"The feature 'Clockspeed' must be positive, but was {features['Clockspeed']}")
-  elif not isinstance(features["Year"], int) and not isinstance(features["Year"], float):
-    raise TypeError(f"The feature 'Year' must be either an int or a float, but was a {type(features['Year']).__name__}")
-  elif not isinstance(features["Total Cores"], int):
-    raise TypeError(f"The feature 'Total Cores' must be an int, but was a {type(features['Total Cores']).__name__}")
-  elif features["Total Cores"] <= 0:
-    raise ValueError(f"The feature 'Total Cores' must be positive, but was {features['Total Cores']}")
-  elif not isinstance(features["Fraction of Cores that are Accelerators"], int) and not isinstance(features["Fraction of Cores that are Accelerators"], float):
-    raise TypeError(f"The feature 'Fraction of Cores that are Accelerators' must be either an int or a float, but was a " +
-    f"{type(features['Fraction of Cores that are Accelerators']).__name__}")
-  elif features["Fraction of Cores that are Accelerators"] < 0 or features["Fraction of Cores that are Accelerators"] > 1:
-    raise ValueError(f"The feature 'Fraction of Cores that are Accelerators' must occupy the interval [0, 1], but was " + 
-                     f"{features['Fraction of Cores that are Accelerators']}")
-  
-  # making a prediction
   train_raw = None
   obs_raw = None
   model = None
@@ -585,29 +561,67 @@ def predict_using_model(model_evaluation_methodology, dependent_variable, featur
   else:
     raise ValueError("Invalid model evaluation methodology or dependent variable")
 
-  accel_cores = features["Fraction of Cores that are Accelerators"] * features["Total Cores"]
-  obs_dict = {
-      "Architecture": features["Architecture"],
-      "Processor Technology": features["Microarchitecture"], # cleaning code expects microarchitecture to be in the processor technology field
-      "Year": features["Year"],
-      "Total Cores": features["Total Cores"],
-      "Processor": f"XXXXXX 10C {features['Clockspeed']}GHz", # cleaning code expects the clockspeed to be embedded in the processor field
-      "Accelerator/Co-Processor Cores": accel_cores,
-      "Rmax [TFlop/s]": 1, # placeholder for observation dependent variable (which isn't known)
-      "Power Effeciency [GFlops/Watts]": 1
-  }
-  obs_raw = pd.DataFrame(obs_dict, index=[0])
-  obs_raw = standardize_dataset(obs_raw)
-  
   if dependent_variable == "Log(Rmax)":
     train_clean = clean_data_dep_var_rmax(train_raw, training_df=train_raw, is_training_set=True, exclude_dupes=False)
-    obs_clean = clean_data_dep_var_rmax(obs_raw, training_df=train_raw, is_training_set=False, exclude_dupes=False)
   else:
     train_clean = clean_data_dep_var_efficiency(train_raw, training_df=train_raw, is_training_set=True, exclude_dupes=False)
-    obs_clean = clean_data_dep_var_efficiency(obs_raw, training_df=train_raw, is_training_set=False, exclude_dupes=False)
 
-  train_x, train_y, test_x, _ = normalize_and_split(train_clean, obs_clean, normalizer=scaler)
+  train_x, train_y, test_data_normalizer = normalize_and_split(train_clean, normalizer=scaler)
   model.fit(train_x, train_y)
-  prediction = model.predict(test_x)[0]
-  return prediction
+
+  # return function making a prediction for fitted model
+  def predict(features):
+    missing_feats = [feat for feat in req_feats if feat not in features]
+    if len(missing_feats) != 0:
+      raise ValueError(_no_bracks(f"The following features are missing: {missing_feats}"))
+
+    if not isinstance(features["Architecture"], str):
+      raise TypeError(f"The feature 'Architecture' must be a string, but was a {type(features['Architecture']).__name__}")
+    elif features["Architecture"] not in legit_arch_vals:
+      raise ValueError(_no_bracks(f"The feature 'Architecture' must have one of these values: {legit_arch_vals}, but was {features['Architecture']}"))
+    elif not isinstance(features["Microarchitecture"], str):
+      raise(TypeError(f"The feature 'Microarchitecture' must be a string, but was a {type(features['Microarchitecture']).__name__}"))
+    elif features["Microarchitecture"] not in legit_uarch_vals:
+      raise ValueError(_no_bracks(f"The feature 'Microarchitecture must have one of these values: {legit_uarch_vals}, but was {features['Microarchitecture']}"))
+    elif not isinstance(features["Clockspeed"], int) and not isinstance(features['Clockspeed'], float):
+      raise TypeError(f"The feature 'Clockspeed' must be either an int or a float, but was a {type(features['Clockspeed']).__name__}")
+    elif features["Clockspeed"] <= 0:
+      raise ValueError(f"The feature 'Clockspeed' must be positive, but was {features['Clockspeed']}")
+    elif not isinstance(features["Year"], int) and not isinstance(features["Year"], float):
+      raise TypeError(f"The feature 'Year' must be either an int or a float, but was a {type(features['Year']).__name__}")
+    elif not isinstance(features["Total Cores"], int):
+      raise TypeError(f"The feature 'Total Cores' must be an int, but was a {type(features['Total Cores']).__name__}")
+    elif features["Total Cores"] <= 0:
+      raise ValueError(f"The feature 'Total Cores' must be positive, but was {features['Total Cores']}")
+    elif not isinstance(features["Fraction of Cores that are Accelerators"], int) and not isinstance(features["Fraction of Cores that are Accelerators"], float):
+      raise TypeError(f"The feature 'Fraction of Cores that are Accelerators' must be either an int or a float, but was a " +
+      f"{type(features['Fraction of Cores that are Accelerators']).__name__}")
+    elif features["Fraction of Cores that are Accelerators"] < 0 or features["Fraction of Cores that are Accelerators"] > 1:
+      raise ValueError(f"The feature 'Fraction of Cores that are Accelerators' must occupy the interval [0, 1], but was " + 
+                       f"{features['Fraction of Cores that are Accelerators']}")
+
+    accel_cores = features["Fraction of Cores that are Accelerators"] * features["Total Cores"]
+    obs_dict = {
+        "Architecture": features["Architecture"],
+        "Processor Technology": features["Microarchitecture"], # cleaning code expects microarchitecture to be in the processor technology field
+        "Year": features["Year"],
+        "Total Cores": features["Total Cores"],
+        "Processor": f"XXXXXX 10C {features['Clockspeed']}GHz", # cleaning code expects the clockspeed to be embedded in the processor field
+        "Accelerator/Co-Processor Cores": accel_cores,
+        "Rmax [TFlop/s]": 1, # placeholder for observation dependent variable (which isn't known)
+        "Power Effeciency [GFlops/Watts]": 1
+    }
+    obs_raw = pd.DataFrame(obs_dict, index=[0])
+    obs_raw = standardize_dataset(obs_raw)
+
+    if dependent_variable == "Log(Rmax)":
+      obs_clean = clean_data_dep_var_rmax(obs_raw, training_df=train_raw, is_training_set=False, exclude_dupes=False)
+    else:
+      obs_clean = clean_data_dep_var_efficiency(obs_raw, training_df=train_raw, is_training_set=False, exclude_dupes=False)
+    
+    test_x, _ = test_data_normalizer(obs_clean)
+    prediction = model.predict(test_x)[0]
+    return prediction
+  
+  return predict
 

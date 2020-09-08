@@ -1,7 +1,7 @@
 import random
 import argparse
 import numpy as np
-from top500models import predict_using_model
+from top500models import train_model
 
 #read in command line inputs
 parser = argparse.ArgumentParser(description='Read settings and features input via the command line, train an appropriate machine learning model, and print the prediction.\n'
@@ -49,7 +49,8 @@ features = {
 seed = argsset.seed
 random.seed(seed)
 
-prediction = predict_using_model(model_evaluation_methodology, dependent_variable, features)
+predictor = train_model(model_evaluation_methodology, dependent_variable)
+prediction = predictor(features)
 is_rmax = dependent_variable == "Log(Rmax)"
 print(f'{dependent_variable} prediction: {round(prediction, 3)}')
 print(f'This corresponds to a {"Rmax" if is_rmax else "Efficiency"} value of {round(np.exp(prediction), 3)} {"TFlops" if is_rmax else "GFlops/Watt"}')
