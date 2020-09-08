@@ -15,7 +15,8 @@ from sklearn.ensemble import RandomForestRegressor
 from lightgbm import LGBMRegressor
 
 #read in command line inputs
-parser = argparse.ArgumentParser(description='Read settings and features input via the command line, train an appropriate machine learning model, and print the prediction')
+parser = argparse.ArgumentParser(description='Read settings and features input via the command line, train an appropriate machine learning model, and print the prediction.\n'
+        + 'Additional instructions for using this script are provided in the README.md file')
 parser.add_argument('model_eval_method', metavar = 'model_eval_method', type=str, help='(str) Model evaluation methodology (ToP or ToA)')
 parser.add_argument('dependent_variable', metavar = 'dependent_variable', type=str, help='(str) Dependent/target variable (LogRmax or LogEfficiency)')
 parser.add_argument('architecture', metavar = 'architecture', type=str, help='(str) Feature specifying the computer architecture')
