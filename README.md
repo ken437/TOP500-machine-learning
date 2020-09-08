@@ -36,4 +36,19 @@ Training Set Information
 
 Library Versions
 ----------------
+
 Library versions needed for this project can be found in the ``requirements.txt`` file.
+To install these Python libraries, you need the `virtualenv` package on your system
+which you should install using your system's package manager.
+
+Then you can run:
+
+```
+virtualenv -p python3 venv
+. venv/bin/activate
+pip install -r requirements.txt
+```
+
+Python 3.6.9 or more recent is required.
+Tested on Ubuntu 18.04-5 LTS and Ubuntu 20.04.
+
