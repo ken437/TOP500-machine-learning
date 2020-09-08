@@ -3,6 +3,7 @@ import numpy as np
 import re
 import math
 import random
+import argparse
 
 #machine learning imports
 from sklearn.preprocessing import StandardScaler
@@ -12,6 +13,19 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from lightgbm import LGBMRegressor
+
+#read in command line inputs
+parser = argparse.ArgumentParser(description='Read settings and features input via the command line, train an appropriate machine learning model, and print the prediction')
+parser.add_argument('model_eval_method', metavar = 'model_eval_method', type=str, help='(str) Model evaluation methodology (ToP or ToA)')
+parser.add_argument('dependent_variable', metavar = 'dependent_variable', type=str, help='(str) Dependent/target variable (LogRmax or LogEfficiency)')
+parser.add_argument('architecture', metavar = 'architecture', type=str, help='(str) Feature specifying the computer architecture')
+parser.add_argument('microarchitecture', metavar = 'uarch', type=str, help='(str) Feature specifying the computer microarchitecture')
+parser.add_argument('year', metavar = 'year', type=int, help='(int) Feature specifying the computer year')
+parser.add_argument('clockspeed', metavar = 'clockspeed', type=float, help='(float) Feature specifying the computer clockspeed')
+parser.add_argument('total_cores', metavar = 'total_cores', type=int, help='(int) Feature specifying the computer core count')
+parser.add_argument('frac_accel_cores', metavar = 'frac_accel_cores', type=float, help='(float) Feature specifying the fraction of cores that are accelerators')
+parser.add_argument('--seed', metavar = 'seed', type=int, action='store', default=10, help='(int) Optional value to seed the random number generator (default=10)')
+argsset = parser.parse_args()
 
 # read in the files (assumes TOP500 files are stored in a directory called 'TOP500_files' in the same directory as this script
 
@@ -611,22 +625,24 @@ def predict_using_model(model_evaluation_methodology, dependent_variable, featur
   prediction = model.predict(test_x)[0]
   return prediction
 
+# argsset contains all args parsed in the beginning of the file
+
 # identify which model to use
-model_evaluation_methodology = "ToP"
-dependent_variable = "Log(Rmax)"
+model_evaluation_methodology = argsset.model_eval_method
+dependent_variable = argsset.dependent_variable
 
 # specify the feature values
 features = {
-    "Architecture": "Cluster", 
-    "Microarchitecture": "POWER9",
-    "Year": 2019,
-    "Clockspeed": 3.0,
-    "Total Cores": 1500000,
-    "Fraction of Cores that are Accelerators": 0.8
+    "Architecture": argsset.architecture, 
+    "Microarchitecture": argsset.microarchitecture,
+    "Year": argsset.year,
+    "Clockspeed": argsset.clockspeed,
+    "Total Cores": argsset.total_cores,
+    "Fraction of Cores that are Accelerators": argsset.frac_accel_cores
 }
 
 # seed the random number generator
-seed = 10
+seed = argsset.seed
 random.seed(seed)
 
 prediction = predict_using_model(model_evaluation_methodology, dependent_variable, features)
