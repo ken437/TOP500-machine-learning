@@ -1,12 +1,13 @@
 import random
 import argparse
+import numpy as np
 from top500models import predict_using_model
 
 #read in command line inputs
 parser = argparse.ArgumentParser(description='Read settings and features input via the command line, train an appropriate machine learning model, and print the prediction.\n'
         + 'Additional instructions for using this script are provided in the README.md file')
 parser.add_argument('model_eval_method', metavar = 'model_eval_method', type=str, help='(str) Model evaluation methodology (ToP or ToA)')
-parser.add_argument('dependent_variable', metavar = 'dependent_variable', type=str, help='(str) Dependent/target variable (LogRmax or LogEfficiency)')
+parser.add_argument('dependent_variable', metavar = 'dependent_variable', type=str, help='(str) Dependent/target variable ("Log(Rmax)" or "Log(Efficiency)")')
 parser.add_argument('architecture', metavar = 'architecture', type=str, help='(str) Feature specifying the computer architecture')
 parser.add_argument('microarchitecture', metavar = 'uarch', type=str, help='(str) Feature specifying the computer microarchitecture')
 parser.add_argument('year', metavar = 'year', type=int, help='(int) Feature specifying the computer year')
