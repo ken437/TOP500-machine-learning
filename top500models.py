@@ -9,9 +9,21 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import MinMaxScaler
 
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.neural_network import MLPRegressor
+from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
+
+from sklearn.base import BaseEstimator
+
+#keras
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
 
 # read in the files (assumes TOP500 files are stored in a directory called 'TOP500_files' in the same directory as this script
 
@@ -405,6 +417,89 @@ def _clean_and_manage_dupes(df_to_clean, training_df, numerical_features, catego
     return clean_df
 
 """
+Set up the training and testing datasets
+@param data_index_to_predict: (1-based) index of the dataset to predict 
+(e.g. 17 when trying to predict 17th dataset)
+@param train_set_indices: list of 1-based indices describing which datasets to include
+in the training set
+@param datasets_list: list of all the datasets in order
+@param earliest_lookup_dataset_index: if you wish to create a lookup set that
+is different from the training set, use this parameter to specify the first dataset
+to include in the lookup set. If you wish for the lookup set to be the same as
+the training set, leave this parameter as None.
+@return: (train, test, lookup) where train is a combination of all datasets
+before the one you want to predict, test is the dataset you want to predict,
+and lookup is the set used for looking up any duplicate values.
+"""
+def set_up_train_and_test(data_index_to_predict, train_set_indices, datasets_list, earliest_lookup_dataset_index=None):
+  test_df = standardize_dataset(datasets_list[data_index_to_predict - 1])
+  train_df = pd.DataFrame()
+  for i in train_set_indices:
+    train_df = train_df.append(standardize_dataset(datasets_list[i - 1]), ignore_index=True)
+                                                  
+  lookup_df = None
+  if earliest_lookup_dataset_index is None:
+    lookup_df = train_df.copy()
+  else:
+    lookup_df = pd.DataFrame()
+    for i in range(earliest_lookup_dataset_index - 1, data_index_to_predict - 1):
+      lookup_df = lookup_df.append(standardize_dataset(datasets_list[i]), ignore_index=True)
+  return (train_df, test_df, lookup_df)
+
+"""
+Function used for getting cleaned, unnormalized datasets
+@param datasets_more_features: list of raw datsets with a larger set of included features
+@param dataset_to_predict: location in the datasets list of what will become the testing dataset
+(e.g. when predicting data in dataset #14, pass in 14)
+@param train_set_indices: list of 1-based indices describing which data files should be included
+in the training set
+@param numerical_features: features that do not require one hot encoding
+@param categorical_features: features that do require one hot encoding
+@param oh_encode: if True, encode features using one hot encoding. Otherwise, use label encoding
+@return: (clean_train_dep_var_rmax, clean_test_dep_var_rmax), where:
+clean_train_dep_var_rmax is cleaned, unnormalized training data with Log(Rmax) in the last column
+clean_test_dep_var_rmax is cleaned, unnormalized testing data with Log(Rmax) in the last column.
+Data points common between this set and clean_train_dep_var_rmax have not yet been removed
+"""
+def get_clean_datasets_rmax(datasets_more_features, dataset_to_predict, train_set_indices, numerical_features = ["Total Cores", "Accelerator/Co-Processor Cores", "Clockspeed", "Year"], 
+        categorical_features = ["Microarchitecture", "Architecture"], oh_encode=True):
+  earliest_lookup_dataset = 1
+  train_df, test_df, lookup_df = set_up_train_and_test(dataset_to_predict, train_set_indices, datasets_more_features, earliest_lookup_dataset_index=earliest_lookup_dataset)
+  #clean data
+  clean_train_dep_var_rmax = clean_data_dep_var_rmax(train_df, train_df, True, exclude_dupes=False, numerical_features=numerical_features, 
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  clean_test_dep_var_rmax = clean_data_dep_var_rmax(test_df, train_df, False, exclude_dupes=False, numerical_features=numerical_features, 
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  clean_lookup_dep_var_rmax = clean_data_dep_var_rmax(lookup_df, train_df, True, exclude_dupes=False, numerical_features=numerical_features,
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  return (clean_train_dep_var_rmax, clean_test_dep_var_rmax)
+
+"""
+Function used for getting cleaned, unnormalized datasets
+@param datasets_more_features: list of raw datsets with a larger set of included features
+@param dataset_to_predict: location in the datasets list of what will become the testing dataset
+(e.g. when predicting data in dataset #14, pass in 14)
+@param train_set_indices: list of 1-based indices describing which data files should be included in the training set
+@param numerical_features: features that do not require one hot encoding
+@param categorical_features: features that do require one hot encoding
+@return: (clean_train_dep_var_efficiency, clean_test_dep_var_efficiency), where: 
+  clean_train_dep_var_efficiency is cleaned, unnormalized training data with Power Effeciency [GFlops/Watts] in the last column 
+  clean_test_dep_var_efficiency is cleaned, unnormalized testing data with Power Effeciency [GFlops/Watts] in the last column.                                                                           Data points common between this set and clean_train_dep_var_efficiency have not yet been removed.
+"""
+def get_clean_datasets_efficiency(datasets_more_features, dataset_to_predict, train_set_indices, numerical_features = ["Total Cores", "Accelerator/Co-Processor Cores", "Clockspeed", "Year"],
+        categorical_features = ["Microarchitecture", "Architecture"], oh_encode=True):
+  earliest_lookup_dataset = 1
+  train_df, test_df, lookup_df = set_up_train_and_test(dataset_to_predict, train_set_indices, datasets_more_features, earliest_lookup_dataset_index=earliest_lookup_dataset)
+  #clean data
+  clean_train_dep_var_effic = clean_data_dep_var_efficiency(train_df, train_df, True, exclude_dupes=False, numerical_features=numerical_features,
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  clean_test_dep_var_effic = clean_data_dep_var_efficiency(test_df, train_df, False, exclude_dupes=False, numerical_features=numerical_features,
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  clean_lookup_dep_var_effic = clean_data_dep_var_efficiency(lookup_df, train_df, True, exclude_dupes=False, numerical_features=numerical_features,
+          categorical_features=categorical_features, oh_encode=oh_encode)
+  return (clean_train_dep_var_effic, clean_test_dep_var_effic)
+
+"""
 Performs preprocessing steps such as removing missing values,
 excluding columns known to be irrelevant, removing units,
 and one-hot encoding categorical data. Should
@@ -460,27 +555,112 @@ data contains the dependent variable.
 @param train: the cleaned, unnormalized training DataFrame to use
 @param test: the cleaned, unnormalized testing DataFrame to use
 @param normalizer: the normalizer class to use. If None, do not normalize
-@return: (train_x, train_y, test_data_normalizer) where train_x is normalized
-training x data, train_y is unnormalized training y data, and
-test_data_normalizer is function that is passed the test data
-and returns the normalized test_x and unnormalized test_y
+@return: (train_x, train_y, test_x, test_y), where train_x is normalized
+training x data, train_y is unnormalized training y data, test_x is normalized
+testing x data, and test_y is unnormalized testing y data
 """
-def normalize_and_split(train, normalizer=StandardScaler):
+def normalize_and_split(train, test, normalizer=StandardScaler):
   train_x = train.values[:,:-1]
   train_y = train.values[:,-1]
+  test_x = test.values[:,:-1]
+  test_y = test.values[:,-1]
   #no need to normalize y data
   if normalizer is not None:
     norm = normalizer()
     norm.fit(train_x)
     train_x = norm.transform(train_x)
-
-  def normalize_test(test):
-    test_x = test.values[:,:-1]
-    test_y = test.values[:,-1]
     test_x = norm.transform(test_x)
-    return (test_x, test_y)
+  return (train_x, train_y, test_x, test_y)
 
-  return (train_x, train_y, normalize_test)
+"""
+Implements the deep neural network described in the study
+'Predicting New Workload or CPU Performance
+by Analyzing Public Datasets' by Yu Wang, Victor Lee, 
+Gu-Yeon Wei, and David Brooks.
+Uses the Keras library
+Designed to use Scikit-Learn style methods
+"""
+class DNN1(BaseEstimator):
+  """
+  Create a DNN1
+  """
+  def __init__(self):
+    self.dnn = keras.Sequential(
+    [
+        layers.Dense(100, activation='tanh', name='first'), #first hidden layer
+        layers.Dense(100, activation='tanh', name='second'), #second hidden layer
+        layers.Dense(100, activation='tanh', name='third'), #third hidden layer
+        layers.Dense(1, name='fourth') #output layer
+    ])
+    optimizer = keras.optimizers.RMSprop(learning_rate=0.001)
+    self.dnn.compile(optimizer=optimizer, loss=keras.losses.mean_absolute_error)
+
+  """
+  Fits a DNN1 on training data
+  @param x: x training data
+  @param y: y training data
+  @return: self
+  """
+  def fit(self, x, y):
+    self.dnn.fit(x, y, epochs=300, verbose=0)
+    return self
+
+  """
+  Predicts y data using x data
+  @param x: x testing data
+  @return: a vector of y predictions
+  """
+  def predict(self, x):
+    pred_y = self.dnn.predict(x)
+    return pred_y
+
+"""
+Implements the deep neural network described in the study
+'Benchmarking Machine Learning Methods for Performance Modeling of 
+Scientific Applications' by Preeti Malakar, Prasanna Balaprakash, 
+Venkatram Vishwanath, et al.
+Uses the Keras library
+Designed to use Scikit-Learn style methods
+"""
+class DNN2(BaseEstimator):
+  """
+  Create a DNN2
+  """
+  def __init__(self):
+    nodes_per_layer = 512
+    act = 'relu'
+    drop_rate = 0.2
+
+    self.dnn = keras.Sequential(
+    [
+      layers.Dense(nodes_per_layer, activation=act, name='first'),
+      layers.Dropout(rate=drop_rate),
+      layers.Dense(nodes_per_layer, activation=act, name='second'),
+      layers.Dropout(rate=drop_rate),
+      layers.Dense(nodes_per_layer, activation=act, name='third'),
+      layers.Dropout(rate=drop_rate),
+      layers.Dense(1, name='fourth')
+    ])
+    self.dnn.compile(optimizer="adam", loss=keras.losses.mean_squared_error)
+
+  """
+  Fits a DNN2 on training data
+  @param x: x training data
+  @param y: y training data
+  @return: self
+  """
+  def fit(self, x, y):
+    self.dnn.fit(x, y, epochs=100, verbose=0, batch_size=512)
+    return self
+
+  """
+  Predicts y data using x data
+  @param x: x testing data
+  @return: a vector of y predictions
+  """
+  def predict(self, x):
+    pred_y = self.dnn.predict(x)
+    return pred_y
 
 """
 Removes square brackets from an input string
