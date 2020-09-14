@@ -1,7 +1,9 @@
+import random
+random.seed(10)
+
 import pandas as pd
 import numpy as np
 import math
-import random
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler

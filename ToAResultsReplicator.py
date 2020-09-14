@@ -1,7 +1,9 @@
+import random
+random.seed(10)
+
 import pandas as pd
 import numpy as np
 import math
-import random
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler
@@ -50,7 +52,7 @@ def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_hold
     raise TypeError(f"dependent_variable must be a str, but was a {type(dependent_variable).__name__}")
   elif dependent_variable not in ["Log(Rmax)", "Log(Efficiency)"]:
     raise ValueError(f"dependent_variable must be either 'Log(Rmax)' or 'Log(Efficiency)', but was '{dependent_variable}'")
-
+  
   holdout, non_holdout = holdout_split(all_datasets)
 
   if is_holdout:
