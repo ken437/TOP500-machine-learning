@@ -15,14 +15,15 @@ from sklearn.neural_network import MLPRegressor
 from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
 
-from ToPResultsReplicator import calc_ToP_result
+from ToPResultsReplicator import calc_ToP_result, calc_ToP_avg_val_score
 from top500models import DNN1, DNN2
+from train_set_select_strats import one_prev, two_prev, three_prev, four_prev, all_prev, half_prev, third_prev
 
 print("Doing a train-on-past run with a RandomForestRegressor with max_depth 5, scaled with StandardScaler, predicting Log(Rmax) in list #14 having trained on lists #12 and 13")
 print("R^2 Score: %.3f" % calc_ToP_result(RandomForestRegressor(max_depth=5), StandardScaler, "Log(Rmax)", 12, 14))
 
-# print("Doing a train-on-past run with a default KNeighborsRegressor, scaled with RobustScaler, predicting Log(Efficiency) in list #7 having trained on lists #1-6")
-# print("R^2 Score: %.3f" % calc_ToP_result(KNeighborsRegressor(), RobustScaler, "Log(Efficiency)", 1, 7))
+print("Doing a train-on-past run with a default KNeighborsRegressor, scaled with RobustScaler, predicting Log(Efficiency) in list #7 having trained on lists #1-6")
+print("R^2 Score: %.3f" % calc_ToP_result(KNeighborsRegressor(), RobustScaler, "Log(Efficiency)", 1, 7))
 
 print("Doing a train-on-past run with dnn1, scaled with MinMaxScaler, predicting Log(Rmax) in list #18 having trained on list #17")
 print("R^2 Score: %.3f" % calc_ToP_result(DNN1(), MinMaxScaler, "Log(Rmax)", 17, 18))
@@ -32,3 +33,10 @@ print("R^2 Score: %.3f" % calc_ToP_result(DNN2(), StandardScaler, "Log(Rmax)", 2
 
 print("Doing a train-on-past run with a default LGBMRegressor, scaled with MinMaxScaler, predicting Log(Rmax) in list #18 having trained on list #17")
 print("R^2 Score: %.3f" % calc_ToP_result(LGBMRegressor(), MinMaxScaler, "Log(Rmax)", 17, 18))
+
+print("Doing a train-on-past run with a default GradientBoostingRegressor, scaled with RobustScaler, predicting Log(Rmax) in list #11 having trained on lists #9 and 10")
+print("R^2 Score: %.3f" % calc_ToP_result(LGBMRegressor(), MinMaxScaler, "Log(Rmax)", 9, 11))
+
+print("Getting the train-on-past validation scores for a LinearRegression, scaled with RobustScaler, predicting Log(Efficiency) with one_prev")
+avg_r2, std_r2 = calc_ToP_avg_val_score(LinearRegression(), RobustScaler, "Log(Efficiency)", one_prev)
+print("Avg. R^2 Score: %.3f, Std. R^2 Score: %.3f" % (avg_r2, std_r2))
