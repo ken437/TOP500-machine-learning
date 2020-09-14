@@ -16,9 +16,13 @@ from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
 
 from ToPResultsReplicator import calc_ToP_result, calc_ToP_avg_val_score
+from ToAResultsReplicator import calc_ToA_result
 from top500models import DNN1, DNN2
 from train_set_select_strats import one_prev, two_prev, three_prev, four_prev, all_prev, half_prev, third_prev
 
+print("Example Usage for Train-on-Past (ToP) Case Study Results")
+print("-" * 75)
+"""
 print("Doing a train-on-past run with a RandomForestRegressor with max_depth 5, scaled with StandardScaler, predicting Log(Rmax) in list #14 having trained on lists #12 and 13")
 print("R^2 Score: %.3f" % calc_ToP_result(RandomForestRegressor(max_depth=5), StandardScaler, "Log(Rmax)", 12, 14))
 
@@ -40,3 +44,22 @@ print("R^2 Score: %.3f" % calc_ToP_result(LGBMRegressor(), MinMaxScaler, "Log(Rm
 print("Getting the train-on-past validation scores for a LinearRegression, scaled with RobustScaler, predicting Log(Efficiency) with one_prev")
 avg_r2, std_r2 = calc_ToP_avg_val_score(LinearRegression(), RobustScaler, "Log(Efficiency)", one_prev)
 print("Avg. R^2 Score: %.3f, Std. R^2 Score: %.3f" % (avg_r2, std_r2))
+"""
+print("Example Usage for Train-on-All (ToA) Case Study Results")
+print("-" * 75)
+
+print("Finding train-on-all avg. validation phase scores with a KNeighborsRegressor with p = 1, scaled with MinMaxScaler, predicting Log(Efficiency)")
+avg_r2, std_r2 = calc_ToA_result(KNeighborsRegressor(p=1), MinMaxScaler, "Log(Efficiency)", is_holdout=False)
+print("Avg. R^2 Score: %.3f, Std. R^2 Score: %.3f" % (avg_r2, std_r2))
+
+print("Finding train-on-all avg. validation phase scores with an XGBRegressor, scaled with RobustScaler, predicting Log(Rmax)")
+avg_r2, std_r2 = calc_ToA_result(XGBRegressor(), RobustScaler, "Log(Rmax)", is_holdout=False)
+print("Avg. R^2 Score: %.3f, Std. R^2 Score: %.3f" % (avg_r2, std_r2))
+
+print("Finding train-on-all holdout set scores with a RandomForestRegressor with n_estimators = 1000, scaled with RobustScaler, predicting Log(Rmax)")
+r2, _ = calc_ToA_result(RandomForestRegressor(n_estimators=1000), RobustScaler, "Log(Rmax)", is_holdout=True)
+print("R^2 Score: %.3f" % r2)
+
+print("Finding train-on-all holdout set scores with a default LGBMRegressor, scaled with MinMaxScaler, predicting Log(Efficiency)")
+r2, _ = calc_ToA_result(LGBMRegressor(), MinMaxScaler, "Log(Efficiency)", is_holdout=True)
+print("R^2 Score: %.3f" % r2)

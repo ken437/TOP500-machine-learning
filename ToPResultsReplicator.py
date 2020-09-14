@@ -18,6 +18,8 @@ from lightgbm import LGBMRegressor
 
 from sklearn.metrics import r2_score
 
+from sklearn.base import BaseEstimator
+
 from top500models import get_clean_datasets_rmax, get_clean_datasets_efficiency, no_dupes, all_datasets, normalize_and_split
 from train_set_select_strats import * #okay because I know everything that's in this file
 
@@ -62,8 +64,8 @@ will be trained on, while list 6 will be the testing set.
 @return: R^2 prediction score for this train-test split.
 """
 def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_train_idx, test_idx):
-    if isinstance(alg_hyp_set_combo, str):
-        raise TypeError("Pass a sklearn model instance to alg_hyp_set_combo, not a str")
+    if not isinstance(alg_hyp_set_combo, BaseEstimator):
+        raise TypeError("alg_hyp_set_combo must be an instance of BaseEstimator, but was a {type(alg_hyp_set_combo).__name__}")
     if scaler_class not in [StandardScaler, RobustScaler, MinMaxScaler]:
         raise ValueError("scaler_class must be either the StandardScaler, RobustScaler, or MinMaxScaler classes, but was")
     if not isinstance(dependent_variable, str):
