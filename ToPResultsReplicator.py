@@ -1,5 +1,7 @@
 import random
 random.seed(10)
+import numpy as np
+np.random.seed(10)
 
 import pandas as pd
 import numpy as np
@@ -21,16 +23,18 @@ from lightgbm import LGBMRegressor
 from sklearn.metrics import r2_score
 
 from sklearn.base import BaseEstimator
+from sklearn.base import clone
 
 from top500models import get_clean_datasets_rmax, get_clean_datasets_efficiency, no_dupes, all_datasets, normalize_and_split
 from train_set_select_strats import * #okay because I know everything that's in this file
 
 """
 Calculates the validation results from the train-on-past (ToP) case
-study of the experiment. Models are trained on 
+study of the experiment. Models are trained to predict each of the TOP500 lists from Jun. 2012 to Nov. 2019,
+and their R^2 scores are averaged and returned.
 @param alg_hyp_set_combo: an untrained instance of a scikit-learn class with its hyperparameters
-set in the constructor. For instance, to use a RandomForest with max_depth=5, pass in RandomForest(max_depth=5).
-For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these.
+set in the constructor. For example, to use a RandomForest with max_depth=5, pass in a RandomForest(max_depth=5) instance.
+For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these from top500models.py.
 @param scaler_class: A scikit-learn class representing the feature scaler to use, either StandardScaler, RobustScaler,
 or MinMaxScaler. Do not pass in an instance such as StandardScaler() or a string such as "StandardScaler"
 @param dependent_variable: str with the value "Log(Rmax)" or "Log(Efficiency)", specifies which
@@ -49,11 +53,11 @@ def calc_ToP_avg_val_score(alg_hyp_set_combo, scaler_class, dependent_variable, 
     return (np.mean(r2_results), np.std(r2_results))
 
 """
-Calculates an individual result from the train-on-past (ToP) case
+Calculates the model R^2 score from an individual train-test split in the train-on-past (ToP) case
 study of the experiment
 @param alg_hyp_set_combo: an untrained instance of a scikit-learn class with its hyperparameters
-set in the constructor. For instance, to use a RandomForest with max_depth=5, pass in RandomForest(max_depth=5).
-For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these.
+set in the constructor. For example, to use a RandomForest with max_depth=5, pass in a RandomForest(max_depth=5) instance.
+For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these from top500models.py.
 @param scaler_class: A scikit-learn class representing the feature scaler to use, either StandardScaler, RobustScaler,
 or MinMaxScaler. Do not pass in an instance such as StandardScaler() or a string such as "StandardScaler"
 @param dependent_variable: str with the value "Log(Rmax)" or "Log(Efficiency)", specifies which
@@ -62,14 +66,14 @@ benchmark measurement to predict
 list in the training set. Must be less than test_idx.
 @param test_idx: int from 2-18 inclusive, specifies the list # of the TOP500 list to use
 in the testing set. For example, if first_train_idx is 3 and test_idx is 6, lists 3, 4, and 5
-will be trained on, while list 6 will be the testing set.
+will be trained on, while list 6 will be the testing set. Must be greater than the parameter first_train_idx.
 @return: R^2 prediction score for this train-test split.
 """
 def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_train_idx, test_idx):
     if not isinstance(alg_hyp_set_combo, BaseEstimator):
         raise TypeError("alg_hyp_set_combo must be an instance of BaseEstimator, but was a {type(alg_hyp_set_combo).__name__}")
     if scaler_class not in [StandardScaler, RobustScaler, MinMaxScaler]:
-        raise ValueError("scaler_class must be either the StandardScaler, RobustScaler, or MinMaxScaler classes, but was")
+        raise ValueError("scaler_class must be either the StandardScaler, RobustScaler, or MinMaxScaler classes, but was {scaler_class}")
     if not isinstance(dependent_variable, str):
         raise TypeError(f"dependent_variable must be a str, but was a {type(dependent_variable).__name__}")
     elif dependent_variable not in ["Log(Rmax)", "Log(Efficiency)"]:
@@ -103,7 +107,7 @@ def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_t
 
     train_x, train_y, test_x, test_y = normalize_and_split(clean_train, clean_test, normalizer=scaler_class)
 
-    model = alg_hyp_set_combo
+    model = clone(alg_hyp_set_combo) #clone() in case the model was already trained
     model.fit(train_x, train_y)
     pred_y = model.predict(test_x)
     return r2_score(test_y, pred_y)

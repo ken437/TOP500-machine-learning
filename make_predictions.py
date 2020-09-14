@@ -1,4 +1,9 @@
 import random
+random.seed(10)
+import numpy as np
+np.random.seed(10)
+
+import random
 import argparse
 import numpy as np
 from top500models import train_model

@@ -1,5 +1,7 @@
 import random
 random.seed(10)
+import numpy as np
+np.random.seed(10)
 
 import pandas as pd
 import numpy as np
@@ -32,8 +34,8 @@ no_dupes, all_datasets, normalize_and_split, standardize_dataset)
 Calculates the validation or holdout results from the train-on-past (ToA) case
 study of the experiment
 @param alg_hyp_set_combo: an untrained instance of a scikit-learn class with its hyperparameters
-set in the constructor. For instance, to use a RandomForest with max_depth=5, pass in RandomForest(max_depth=5).
-For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these.
+set in the constructor. For example, to use a RandomForest with max_depth=5, pass in a RandomForest(max_depth=5) instance.
+For dnn1 and dnn2, use the class names DNN1 and DNN2 respectively. Don't forget to import these from top500models.py.
 @param scaler_class: A scikit-learn class representing the feature scaler to use, either StandardScaler, RobustScaler,
 or MinMaxScaler. Do not pass in an instance such as StandardScaler() or a string such as "StandardScaler"
 @param dependent_variable: str with the value "Log(Rmax)" or "Log(Efficiency)", specifies which
@@ -47,13 +49,13 @@ def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_hold
   if not isinstance(alg_hyp_set_combo, BaseEstimator):
     raise TypeError("alg_hyp_set_combo must be an instance of BaseEstimator, but was a {type(alg_hyp_set_combo).__name__}")
   if scaler_class not in [StandardScaler, RobustScaler, MinMaxScaler]:
-    raise ValueError("scaler_class must be either the StandardScaler, RobustScaler, or MinMaxScaler classes, but was")
+    raise ValueError("scaler_class must be either the StandardScaler, RobustScaler, or MinMaxScaler classes, but was {scaler_class}")
   if not isinstance(dependent_variable, str):
     raise TypeError(f"dependent_variable must be a str, but was a {type(dependent_variable).__name__}")
   elif dependent_variable not in ["Log(Rmax)", "Log(Efficiency)"]:
     raise ValueError(f"dependent_variable must be either 'Log(Rmax)' or 'Log(Efficiency)', but was '{dependent_variable}'")
   
-  holdout, non_holdout = holdout_split(all_datasets)
+  non_holdout, holdout = holdout_split(all_datasets)
 
   if is_holdout:
       score = train_test_predict(non_holdout, holdout, alg_hyp_set_combo, dep_var=dependent_variable, scaler=scaler_class)
@@ -116,7 +118,7 @@ training the model on the training set and scoring it on the validation set.
 Repeats this process many times with different train/val splits each time.
 @param non_holdout: non heldout raw, standardized data, combined into one dataframe
 @param model: untrained model
-@param iterations: number times to repeat the process
+@param iterations: number of times to repeat the process
 @param frac_val: fraction of the set that will be used for validation
 @param scaler: class of scikit-learn scaling transformer to use on the x data
 @param dep_var: dependent variable, either 'Log(Rmax)' or 'Log(Efficiency)'

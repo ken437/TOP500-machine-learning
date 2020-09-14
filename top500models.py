@@ -1,3 +1,10 @@
+import random
+random.seed(10)
+import numpy as np
+np.random.seed(10)
+import tensorflow
+tensorflow.random.set_seed(10)
+
 import pandas as pd
 import numpy as np
 import re
@@ -21,7 +28,6 @@ from lightgbm import LGBMRegressor
 from sklearn.base import BaseEstimator
 
 #keras
-import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 

@@ -1,3 +1,8 @@
+import random
+random.seed(10)
+import numpy as np
+np.random.seed(10)
+
 import pandas as pd
 import numpy as np
 import math
@@ -22,7 +27,7 @@ from train_set_select_strats import one_prev, two_prev, three_prev, four_prev, a
 
 print("Example Usage for Train-on-Past (ToP) Case Study Results")
 print("-" * 75)
-
+"""
 print("Doing a train-on-past run with a RandomForestRegressor with max_depth 5, scaled with StandardScaler, predicting Log(Rmax) in list #14 having trained on lists #12 and 13")
 print("R^2 Score: %.3f" % calc_ToP_result(RandomForestRegressor(max_depth=5), StandardScaler, "Log(Rmax)", 12, 14))
 
@@ -38,13 +43,17 @@ print("R^2 Score: %.3f" % calc_ToP_result(DNN2(), StandardScaler, "Log(Rmax)", 2
 print("Doing a train-on-past run with a default LGBMRegressor, scaled with MinMaxScaler, predicting Log(Rmax) in list #18 having trained on list #17")
 print("R^2 Score: %.3f" % calc_ToP_result(LGBMRegressor(), MinMaxScaler, "Log(Rmax)", 17, 18))
 
+print("Getting the train-on-past validation scores with dnn2, scaled with RobustScaler, predicting Log(Rmax) using all_prev")
+avg_r2, std_r2 = calc_ToP_avg_val_score(DNN2(), RobustScaler, "Log(Rmax)", all_prev)
+print("Avg. R^2 Score: %.3f Std. R^2 Score: %.3f" % (avg_r2, std_r2))
+
 print("Doing a train-on-past run with a default GradientBoostingRegressor, scaled with RobustScaler, predicting Log(Rmax) in list #11 having trained on lists #9 and 10")
 print("R^2 Score: %.3f" % calc_ToP_result(GradientBoostingRegressor(), RobustScaler, "Log(Rmax)", 9, 11))
 
 print("Getting the train-on-past validation scores for a LinearRegression, scaled with RobustScaler, predicting Log(Efficiency) with one_prev")
 avg_r2, std_r2 = calc_ToP_avg_val_score(LinearRegression(), RobustScaler, "Log(Efficiency)", one_prev)
 print("Avg. R^2 Score: %.3f, Std. R^2 Score: %.3f" % (avg_r2, std_r2))
-
+"""
 print()
 print("Example Usage for Train-on-All (ToA) Case Study Results")
 print("-" * 75)
