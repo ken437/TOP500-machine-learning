@@ -58,7 +58,6 @@ def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_hold
       return (score, None)
   else:
       return random_subsample_val(non_holdout, alg_hyp_set_combo, dep_var=dependent_variable, scaler=scaler_class)
-  
 
 """
 Given a list of raw dataframes, combines all the data
