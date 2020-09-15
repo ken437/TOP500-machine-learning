@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import math
 
+import tensorflow
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import MinMaxScaler
@@ -40,15 +42,16 @@ or MinMaxScaler. Do not pass in an instance such as StandardScaler() or a string
 @param dependent_variable: str with the value "Log(Rmax)" or "Log(Efficiency)", specifies which
 benchmark measurement to predict
 @param train_set_select_strat: training set selection strategy (e.g. one_prev). Import the train_set_select_strats file and choose a strategy from the variable ALL_TRAIN_SET_SELECT_STRATS.
+@param random_state: Leave as None to seed the random number generator with a fixed value each time, or pass an int to use a user-specified seed value
 @return: (avg, std) of R^2 prediction scores for all the validation train-test splits.
 """
-def calc_ToP_avg_val_score(alg_hyp_set_combo, scaler_class, dependent_variable, train_set_select_strat):
+def calc_ToP_avg_val_score(alg_hyp_set_combo, scaler_class, dependent_variable, train_set_select_strat, random_state=None):
     if train_set_select_strat not in ALL_TRAIN_SET_SELECT_STRATS:
         raise ValueError(f"train_set_select_strat that was input, {train_set_select_strat}, must be one of the following functions from the train_set_select_strats.py file: {[strat.__name__ for strat in ALL_TRAIN_SET_SELECT_STRATS]}")
     r2_results = []
     for val_set_idx in range(2, 18):
         train_set_size = train_set_select_strat(val_set_idx)
-        score = calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, val_set_idx - train_set_size, val_set_idx)
+        score = calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, val_set_idx - train_set_size, val_set_idx, random_state=random_state)
         r2_results.append(score)
     return (np.mean(r2_results), np.std(r2_results))
 
@@ -67,9 +70,10 @@ list in the training set. Must be less than test_idx.
 @param test_idx: int from 2-18 inclusive, specifies the list # of the TOP500 list to use
 in the testing set. For example, if first_train_idx is 3 and test_idx is 6, lists 3, 4, and 5
 will be trained on, while list 6 will be the testing set. Must be greater than the parameter first_train_idx.
+@param random_state: Leave as None to seed the random number generator with a fixed value each time, or pass an int to use a user-specified seed value
 @return: R^2 prediction score for this train-test split.
 """
-def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_train_idx, test_idx):
+def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_train_idx, test_idx, random_state=None):
     if not isinstance(alg_hyp_set_combo, BaseEstimator):
         raise TypeError("alg_hyp_set_combo must be an instance of BaseEstimator, but was a {type(alg_hyp_set_combo).__name__}")
     if scaler_class not in [StandardScaler, RobustScaler, MinMaxScaler]:
@@ -89,6 +93,11 @@ def calc_ToP_result(alg_hyp_set_combo, scaler_class, dependent_variable, first_t
     if test_idx <= first_train_idx:
         raise ValueError(f"test_idx must be greater than first_train_idx, but test_idx was {test_idx} and first_train_idx was {first_train_idx}")
     
+    if random_state is not None:
+        random.seed(random_state)
+        np.random.seed(random_state)
+        tensorflow.random.set_seed(random_state)
+
     clean_train = None
     clean_test = None
 

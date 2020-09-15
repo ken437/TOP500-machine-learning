@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import math
 
+import tensorflow
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import MinMaxScaler
@@ -42,10 +44,11 @@ or MinMaxScaler. Do not pass in an instance such as StandardScaler() or a string
 benchmark measurement to predict
 @param is_holdout: if true, train the model on the entire non-holdout set and test on the holdout set. If false,
 perform 20 train-validation splits on the non-holdout set and average the results
+@param random_state: Leave as None to seed the random number generator with a fixed value each time, or pass an int to use a user-specified seed value
 @return: (avg, std) of average R^2 scores if is_holdout is false; otherwise, (score, None) where score is the R^2
 score on the holdout set
 """
-def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_holdout):
+def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_holdout, random_state=None):
   if not isinstance(alg_hyp_set_combo, BaseEstimator):
     raise TypeError("alg_hyp_set_combo must be an instance of BaseEstimator, but was a {type(alg_hyp_set_combo).__name__}")
   if scaler_class not in [StandardScaler, RobustScaler, MinMaxScaler]:
@@ -55,6 +58,11 @@ def calc_ToA_result(alg_hyp_set_combo, scaler_class, dependent_variable, is_hold
   elif dependent_variable not in ["Log(Rmax)", "Log(Efficiency)"]:
     raise ValueError(f"dependent_variable must be either 'Log(Rmax)' or 'Log(Efficiency)', but was '{dependent_variable}'")
   
+  if random_state is not None:
+      random.seed(random_state)
+      np.random.seed(random_state)
+      tensorflow.random.set_seed(random_state)
+
   non_holdout, holdout = holdout_split(all_datasets)
 
   if is_holdout:
