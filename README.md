@@ -72,7 +72,7 @@ from top500models import DNN1, DNN2
 from train_set_select_strats import one_prev, two_prev, three_prev, four_prev, all_prev, half_prev, third_prev
 ```
 
-The important functions for replicating our results are the ``calc_ToP_result``, ``calc_ToP_avg_val_score``, and ``calc_ToA_result`` functions. These functions can replicate the result of an individual train-test split in the train-on-past section of our experiment, replicate the average and standard deviation validation-phase model scores in the train-on-past section of our experiment, and replicate the validation or holdout results in the train-on-all section of our experiment, respectively. Detailed information on these functions is found in their documentation within the ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py`` fileslu.
+The important functions for replicating our results are the ``calc_ToP_result``, ``calc_ToP_avg_val_score``, and ``calc_ToA_result`` functions. These functions can replicate the result of an individual train-test split in the train-on-past section of our experiment, replicate the average and standard deviation validation-phase model scores in the train-on-past section of our experiment, and replicate the validation or holdout results in the train-on-all section of our experiment, respectively. Detailed information on these functions is found in their documentation within the ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py`` files.
 
 Examples of Using ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py``
 -----------------------------------------------------------------------------
