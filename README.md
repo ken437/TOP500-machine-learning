@@ -1,6 +1,6 @@
 Overview
 --------
-This repository contains three key files that are useful for testing our models and replicating our results: ``make_predictions.py``, `` ToAResultsReplicator.py``, and ``ToPResultsReplicator.py``. The former file is for using our best models to make predictions about arbitrary and hypothetical supercomputers, and the latter two files are for evaluating our models on TOP500 data. Below we will describe how to use these files:
+This repository contains three important files that are useful for testing our models and replicating our results: ``make_predictions.py``, `` ToAResultsReplicator.py``, and ``ToPResultsReplicator.py``. The former file is for using our best models to make predictions about hypothetical supercomputers, and the latter two files are for evaluating our models on TOP500 data. Below we will describe how to use these files:
 
 ``make_predictions.py`` Description
 -----------------------------------
@@ -77,14 +77,16 @@ The important functions for replicating our results are the ``calc_ToP_result``,
 Examples of Using ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py``
 -----------------------------------------------------------------------------
 
-The file ``example_usage.py`` contains examples of how to use the functions in the two replicator files. When running the script with ``python3 example_usage.py``, the program will print a message describing which of the experimental results it is going to calculate, and then it will calculate that result, printing the result to standard output. For example:
+The file ``example_usage.py`` contains examples of how to use the functions in these two files. When running the script with ``python3 example_usage.py``, the program will print a message describing which of the experimental results it is going to calculate, and then it will calculate that result, printing the result to standard output. For example:
 
 ```
 Finding train-on-all avg. validation phase scores with a KNeighborsRegressor with p = 1, scaled with MinMaxScaler, predicting Log(Efficiency)
 Avg. R^2 Score: 0.704, Std. R^2 Score: 0.079
 ```
 
-If the script is run on a system without the proper accelerators, the following Tensorflow warning messages may appear:
+This will be repeated for many different experimental results.
+
+If the script is run on a system without the proper accelerators, Tensorflow warning messages such as the following may appear:
 
 ```
 2020-09-14 07:58:35.982993: W tensorflow/stream_executor/platform/default/dso_loader.cc:59] Could not load dynamic library 'libcudart.so.10.1'; dlerror: libcudart.so.10.1: cannot open shared object file: No such file or directory
