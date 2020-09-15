@@ -44,13 +44,54 @@ Command line argument values are restricted in the following ways:
 Unlike ``make_predictions.py``, which is a script that is meant to be run from the command line, these two files are designed to be imported. When using these files, we recommend creating a Python file in the root directory of this repository and running the following imports:
 
 ```Python
+import random
+random.seed(10)
+import numpy as np
+np.random.seed(10)
+
+import pandas as pd
+import numpy as np
+import math
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import MinMaxScaler
+
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.neural_network import MLPRegressor
+from xgboost import XGBRegressor
+from lightgbm import LGBMRegressor
+
 from ToPResultsReplicator import calc_ToP_result, calc_ToP_avg_val_score
 from ToAResultsReplicator import calc_ToA_result
 from top500models import DNN1, DNN2
 from train_set_select_strats import one_prev, two_prev, three_prev, four_prev, all_prev, half_prev, third_prev
 ```
 
-The important functions for replicating our results are the ``calc_ToP_result``, ``calc_ToP_avg_val_score``, and ``calc_ToA_result`` functions.
+The important functions for replicating our results are the ``calc_ToP_result``, ``calc_ToP_avg_val_score``, and ``calc_ToA_result`` functions. These functions can replicate the result of an individual train-test split in the train-on-past section of our experiment, replicate the average and standard deviation validation-phase model scores in the train-on-past section of our experiment, and replicate the validation or holdout results in the train-on-all section of our experiment, respectively. Detailed information on these functions is found in their documentation.
+
+Examples of Using ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py``
+-----------------------------------------------------------------------------
+
+The file ``example_usage.py`` contains examples of how to use the functions in the two replicator files. When running the script with ``python3 example_usage.py``, the program will print a message describing which of the experimental results it is going to calculate, and then it will calculate that result, printing the result to standard output. For example:
+
+```
+Finding train-on-all avg. validation phase scores with a KNeighborsRegressor with p = 1, scaled with MinMaxScaler, predicting Log(Efficiency)
+Avg. R^2 Score: 0.704, Std. R^2 Score: 0.079
+```
+
+If the script is run on a system without the proper accelerators, the following Tensorflow warning messages may appear:
+
+```
+2020-09-14 07:58:35.982993: W tensorflow/stream_executor/platform/default/dso_loader.cc:59] Could not load dynamic library 'libcudart.so.10.1'; dlerror: libcudart.so.10.1: cannot open shared object file: No such file or directory
+2020-09-14 07:58:35.983041: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+```
+
+To resolve these warnings, copy the code to a system that is equipped with accelerators and try again.
 
 Library Versions
 ----------------
