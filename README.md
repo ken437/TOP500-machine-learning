@@ -114,7 +114,7 @@ To seed the random number generator used in our code with a value other than its
 results = []
 n_iters = 30
 
-for iter in n_iters:
+for iter in range(n_iters):
     result = calc_ToP_result(RandomForestRegressor(), StandardScaler, "Log(Rmax)", 5, 10, random_state=iter)
     results.append(result)
 print("Avg. R^2 Result: %.3f (%.3f)" % (np.mean(results), np.std(results)))
