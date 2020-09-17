@@ -95,6 +95,31 @@ If the script is run on a system without the proper accelerators, Tensorflow war
 
 To resolve these warnings, copy the code to a system that is equipped with accelerators and try again.
 
+Additional Tips For Using ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py``
+-------------------------------------------------------------------------------------
+
+When calculating our published experimental results, we ran our code on Google Colab. Note that running the code on systems equipped with different hardware may result in slightly different results. 
+
+We used an unknown random seed in the Google Colab version of the code. Because of this, in some but not all cases the Google Colab code outputs different results on consecutive, identical runs. For example, when running the Google Colab code 50 times in a row to calculate the train-on-all case study holdout set score of a RandomForestRegressor scaled with RobustScaler when predicting Log(Rmax), we obtained an average R<sup>2</sup> score of 0.943 with a standard deviation of 0.003 across the code runs. However, when the same task was performed using an XGBRegressor instead of a RandomForestRegressor, we obtained an average R<sup>2</sup> score of 0.925 with a standard deviation of 1.11e-16, demonstrating that consecutive, identical runs of the Google Colab code do not always differ.
+
+Nevertheless, when preparing code for this repository we designed it to seed the random number generator with a fixed value by default, so that two identical runs of the same functions yield the exact same results. Because the Google Colab code used to calculate our experimental results did not set a fixed random seed each run, results from the code in this repository may not exactly match our reported experimental results. However, the two sets of results should be very similar, and the major trends described in our paper (e.g. "ToA scores tend to be higher than ToP scores") can be clearly reproduced by the code in this repository.
+
+To seed the random number generator used in our code with a value other than its fixed default, pass an integer to the ``random_state`` argument of the functions ``calc_ToP_avg_val_score``, ``calc_ToP_result``, or ``calc_ToA_result``. This is useful when running a function many times in a loop with different random seeds to find the average and standard deviation of the results across many consecutive runs, as demonstrated by the below code:
+
+```Python
+# necessary import statements
+# ...
+# ...
+
+results = []
+n_iters = 30
+
+for iter in n_iters:
+    result = calc_ToP_result(RandomForestRegressor(), StandardScaler, "Log(Rmax)", 5, 10, random_state=iter)
+    results.append(result)
+print("Avg. R^2 Result: %.3f (%.3f)" % (np.mean(results), np.std(results)))
+```
+
 Library Versions
 ----------------
 
