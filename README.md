@@ -98,7 +98,7 @@ To resolve these warnings, copy the code to a system that is equipped with accel
 Additional Tips For Using ``ToAResultsReplicator.py`` and ``ToPResultsReplicator.py``
 -------------------------------------------------------------------------------------
 
-When calculating our published experimental results, we ran our code on Google Colab. Note that running the code on systems equipped with different hardware may result in slightly different results. 
+When calculating our experimental results, we ran our code on Google Colab. Note that running the code on systems equipped with different hardware may result in slightly different results. 
 
 We used an unknown random seed in the Google Colab version of the code. Because of this, in some but not all cases the Google Colab code outputs different results on consecutive, identical runs. For example, when running the Google Colab code 50 times in a row to calculate the train-on-all case study holdout set score of a RandomForestRegressor scaled with RobustScaler when predicting Log(Rmax), we obtained an average R<sup>2</sup> score of 0.943 with a standard deviation of 0.003 across the code runs. However, when the same task was performed using an XGBRegressor instead of a RandomForestRegressor, we obtained an average R<sup>2</sup> score of 0.925 with a standard deviation of 1.11e-16, demonstrating that consecutive, identical runs of the Google Colab code do not always differ.
 
