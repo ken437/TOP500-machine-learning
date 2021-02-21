@@ -752,7 +752,13 @@ def train_model(model_evaluation_methodology, dependent_variable):
   else:
     train_clean = clean_data_dep_var_efficiency(train_raw, training_df=train_raw, is_training_set=True, exclude_dupes=False)
 
-  train_x, train_y, test_data_normalizer = normalize_and_split(train_clean, normalizer=scaler)
+  train_x = train_clean.values[:,:-1]
+  train_y = train_clean.values[:,-1]
+  norm = scaler()
+  norm.fit(train_x)
+  train_x = norm.transform(train_x)
+  test_data_normalizer = norm.transform
+  # train_x, train_y, test_data_normalizer = normalize_and_split(train_clean, normalizer=scaler)
   model.fit(train_x, train_y)
 
   # return function making a prediction for fitted model
@@ -805,7 +811,7 @@ def train_model(model_evaluation_methodology, dependent_variable):
     else:
       obs_clean = clean_data_dep_var_efficiency(obs_raw, training_df=train_raw, is_training_set=False, exclude_dupes=False)
     
-    test_x, _ = test_data_normalizer(obs_clean)
+    test_x = test_data_normalizer(obs_clean.values[:,:-1])
     prediction = model.predict(test_x)[0]
     return prediction
   
